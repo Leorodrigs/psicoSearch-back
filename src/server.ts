@@ -4,7 +4,7 @@ import { PlacesClient } from "./services/places-client.js";
 import { SearchService } from "./services/search-service.js";
 
 const port = Number.parseInt(process.env.PORT ?? "3001", 10);
-const host = process.env.HOST?.trim() || "127.0.0.1";
+const host = process.env.HOST?.trim() || "0.0.0.0";
 const placesClient = new PlacesClient(process.env.GOOGLE_PLACES_API_KEY);
 const searchService = new SearchService((textQuery, pageToken) => placesClient.searchText(textQuery, pageToken));
 const app = createApp(searchService);

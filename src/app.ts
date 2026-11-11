@@ -5,6 +5,34 @@ import { SearchCursorError, SearchInputError, SearchService } from "./services/s
 
 export function createApp(searchService: SearchService) {
   const app = express();
+  const defaultOrigins = ["http://localhost:5173", "http://127.0.0.1:5173"];
+  const allowedOrigins = new Set(
+    (process.env.FRONTEND_ORIGINS ?? defaultOrigins.join(","))
+      .split(",")
+      .map((origin) => origin.trim().replace(/\/+$/, ""))
+      .filter(Boolean)
+  );
+
+  app.use((request, response, next) => {
+    const origin = request.header("Origin");
+    const isAllowedOrigin = origin !== undefined && allowedOrigins.has(origin);
+
+    if (isAllowedOrigin) {
+      response.setHeader("Access-Control-Allow-Origin", origin);
+      response.setHeader("Vary", "Origin");
+      response.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+      response.setHeader("Access-Control-Allow-Headers", "Content-Type");
+      response.setHeader("Access-Control-Max-Age", "600");
+    }
+
+    if (request.method === "OPTIONS") {
+      response.sendStatus(origin === undefined || isAllowedOrigin ? 204 : 403);
+      return;
+    }
+
+    next();
+  });
+
   app.use(express.json({ limit: "16kb" }));
 
   app.get("/api/categories", (_request, response) => {
